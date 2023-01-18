@@ -18,7 +18,7 @@
 
 (define-module (gnu system images visionfive2)
   #:use-module (gnu bootloader)
-  #:use-module (rrr bootloader u-boot)
+  #:use-module (vf2-guix bootloader u-boot)
   #:use-module (gnu image)
   #:use-module (gnu packages linux)
   #:use-module (gnu services)

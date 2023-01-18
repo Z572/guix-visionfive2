@@ -16,10 +16,10 @@
 ;;; You should have received a copy of the GNU General Public License
 ;;; along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-(define-module (rrr bootloader u-boot)
+(define-module (vf2-guix bootloader u-boot)
   #:use-module (gnu bootloader)
   #:use-module (gnu bootloader u-boot)
-  #:use-module (rrr packages bootloaders)
+  #:use-module (vf2-guix packages bootloaders)
   #:use-module (guix gexp)
   #:export (u-boot-starfive-visionfive2-bootloader))
 
