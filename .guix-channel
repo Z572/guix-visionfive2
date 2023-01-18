@@ -1,0 +1,5 @@
+;; -*- mode: scheme; -*-
+
+(channel
+ (version 0)
+ (url "https://git.sr.ht/~akagi/vf2-guix"))
