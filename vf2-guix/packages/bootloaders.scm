@@ -43,9 +43,9 @@
   #:use-module (ice-9 regex))
 
 (define u-boot
-  (let ((commit "66a72185a813c36b8975fd7ded9d74d6a5525db7")
+  (let ((commit "688befadf1d337dee3593e6cc0fe1c737cc150bd")
         (revision "0")
-        (version "VF2_v2.6.0"))
+        (version "VF2_v2.11.5"))
     (package
       (name "u-boot")
       (version (git-version version revision commit))
@@ -58,7 +58,7 @@
          (file-name (git-file-name name version))
          (sha256
           (base32
-           "1sgs0474hvp54j1b6x926dr831vgp4axmmg184f47ygbwghzqh7i"))))
+           "1sp4lwksa701jgpnj8a1q9wgqgl6wz8w2s2wdviyrjjrjh806q24"))))
       (build-system gnu-build-system)
       (native-inputs
        (list bc
