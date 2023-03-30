@@ -19,6 +19,8 @@
 (define-module (vf2-guix packages firmware)
   #:use-module (gnu packages)
   #:use-module (gnu packages firmware)
+  #:use-module (gnu packages bootloaders)
+  #:use-module (gnu packages python)
   #:use-module (gnu packages cross-base)
   #:use-module (gnu packages gcc)
   ;; #:use-module (vf2-guix packages bootloaders)
@@ -34,9 +36,9 @@
   #:use-module (ice-9 regex))
 
 (define-public opensbi-visionfive2
-  (let ((commit "6f1fe98c2f565a394f258178b0daa3843672395c")
+  (let ((commit "c6a092cd80112529cb2e92e180767ff5341b22a3")
         (revision "0")
-        (version "VF2_v2.6.0"))
+        (version "VF2_v2.11.5"))
     (package
       (name "opensbi-visionfive2")
       (version (git-version version revision commit))
@@ -48,7 +50,7 @@
                (commit commit)))
          (file-name (git-file-name name version))
          (sha256
-          (base32 "0v1dinli7l8cgd6by1k6dw5ysbhlbjbz692gvzfigqi37nyc7zzf"))))
+          (base32 "1q33m8djhx1dwrnbm6glkj5zy37ffa1hjcf4yv9bxr3jcc0ycp6b"))))
       (build-system gnu-build-system)
       (arguments
        (list
@@ -87,6 +89,7 @@
                `(("cross-gcc" ,(cross-gcc "riscv64-linux-gnu" #:xgcc gcc-7))
                  ("cross-binutils" ,(cross-binutils "riscv64-linux-gnu")))
                '())))
+      (inputs (list python dtc))
       (home-page "https://github.com/riscv/opensbi")
       (synopsis "RISC-V Open Source Supervisor Binary Interface")
       (description "A reference implementation of the RISC-V SBI specifications
