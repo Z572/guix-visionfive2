@@ -26,7 +26,9 @@
   #:use-module (gnu system)
   #:use-module (gnu system file-systems)
   #:use-module (gnu system image)
+  #:use-module (gnu build image)
   #:use-module (guix records)
+  #:use-module (guix gexp)
   #:use-module (srfi srfi-26)
   #:export (visionfive2-barebones-os
             visionfive2-image-type
@@ -70,12 +72,41 @@
                               (tty "ttyS2")))
                     %base-services))))
 
+(define root-label "Guix_image")
+
+(define boot-offset (* 12288 2048))
+
+(define boot-partition
+  (partition
+   (size (* 292 (expt 2 20)))
+   (offset boot-offset)
+   (label "GNU-BOOT") ;cosmetic only
+   ;; Use "vfat" here since this property is used when mounting.  The actual
+   ;; FAT-ness is based on file system size (16 in this case).
+   (file-system "vfat")
+   (flags '(boot))
+   (initializer (gexp initialize-efi-partition))))
+
+(define root-partition
+  (partition
+   (size 'guess)
+   (label root-label)
+   (file-system "ext4")
+   ;; Disable the metadata_csum and 64bit features of ext4, for compatibility
+   ;; with U-Boot.
+   (file-system-options (list "-O" "^metadata_csum,^64bit"))
+   (flags '(root))
+   (initializer (gexp initialize-root-partition))))
+
+(define visionfive2-disk-image
+  (image-without-os
+   (format 'disk-image)
+   (partitions (list boot-partition root-partition))))
+
 (define visionfive2-image-type
   (image-type
    (name 'visionfive2-raw)
-   (constructor (cut image-with-os
-                     (raw-with-offset-disk-image (* 298 (expt 2 20))) ;298MiB
-                     <>))))
+   (constructor (cut image-with-os visionfive2-disk-image <>))))
 
 (define visionfive2-barebones-raw-image
   (image
