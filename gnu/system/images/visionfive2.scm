@@ -121,6 +121,8 @@
                  (size 'guess)
                  (label "root")
                  (file-system "ext4")
+                 (file-system-options (list "-O" "^metadata_csum,^64bit"))
+                 (flags '(boot))
                  (initializer (gexp initialize-root-partition)))))))
 
 (define visionfive2-image-type
