@@ -113,7 +113,7 @@
                  (label "uboot")
                  (offset (* 8192 512)))
                 (partition
-                 (size (* 292 MiB))
+                 (size 'guess)
                  (offset (* 12288 512))
                  (label "boot")
                  (file-system "vfat"))
