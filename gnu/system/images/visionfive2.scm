@@ -98,6 +98,8 @@
 ;;    (flags '(boot))
 ;;    (initializer (gexp initialize-root-partition))))
 
+(define MiB (expt 2 20))
+
 (define visionfive2-disk-image
   (image-without-os
    (format 'disk-image)
