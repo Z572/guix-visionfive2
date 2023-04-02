@@ -72,36 +72,54 @@
                               (tty "ttyS2")))
                     %base-services))))
 
-(define root-label "Guix_image")
+;; (define root-label "Guix_image")
 
-(define boot-offset (* 12288 2048))
+;; (define boot-offset (* 12288 512))
 
-(define boot-partition
-  (partition
-   (size (* 292 (expt 2 20)))
-   (offset boot-offset)
-   (label "GNU-BOOT") ;cosmetic only
-   ;; Use "vfat" here since this property is used when mounting.  The actual
-   ;; FAT-ness is based on file system size (16 in this case).
-   (file-system "vfat")
-   (flags '(esp))
-   (initializer (gexp initialize-efi-partition))))
+;; (define boot-partition
+;;   (partition
+;;    (size (* 292 (expt 2 20)))
+;;    (offset boot-offset)
+;;    (label "GNU-BOOT") ;cosmetic only
+;;    ;; Use "vfat" here since this property is used when mounting.  The actual
+;;    ;; FAT-ness is based on file system size (16 in this case).
+;;    (file-system "vfat")
+;;    (flags '(esp))
+;;    (initializer (gexp initialize-efi-partition))))
 
-(define root-partition
-  (partition
-   (size 'guess)
-   (label root-label)
-   (file-system "ext4")
-   ;; Disable the metadata_csum and 64bit features of ext4, for compatibility
-   ;; with U-Boot.
-   (file-system-options (list "-O" "^metadata_csum,^64bit"))
-   (flags '(boot))
-   (initializer (gexp initialize-root-partition))))
+;; (define root-partition
+;;   (partition
+;;    (size 'guess)
+;;    (label root-label)
+;;    (file-system "ext4")
+;;    ;; Disable the metadata_csum and 64bit features of ext4, for compatibility
+;;    ;; with U-Boot.
+;;    (file-system-options (list "-O" "^metadata_csum,^64bit"))
+;;    (flags '(boot))
+;;    (initializer (gexp initialize-root-partition))))
 
 (define visionfive2-disk-image
   (image-without-os
    (format 'disk-image)
-   (partitions (list boot-partition root-partition))))
+   (partitions (list
+                (partition
+                 (size (* 2 MiB))
+                 (label "spl")
+                 (offset (* 4096 512)))
+                (partition
+                 (size (* 4 MiB))
+                 (label "uboot")
+                 (offset (* 8192 512)))
+                (partition
+                 (size (* 292 MiB))
+                 (offset (* 12288 512))
+                 (label "boot")
+                 (file-system "vfat"))
+                (partition
+                 (size 'guess)
+                 (label "root")
+                 (file-system "ext4")
+                 (initializer (gexp initialize-root-partition)))))))
 
 (define visionfive2-image-type
   (image-type
