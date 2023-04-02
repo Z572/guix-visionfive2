@@ -84,7 +84,7 @@
    ;; Use "vfat" here since this property is used when mounting.  The actual
    ;; FAT-ness is based on file system size (16 in this case).
    (file-system "vfat")
-   (flags '(boot))
+   (flags '(esp))
    (initializer (gexp initialize-efi-partition))))
 
 (define root-partition
@@ -95,7 +95,7 @@
    ;; Disable the metadata_csum and 64bit features of ext4, for compatibility
    ;; with U-Boot.
    (file-system-options (list "-O" "^metadata_csum,^64bit"))
-   (flags '(root))
+   (flags '(boot))
    (initializer (gexp initialize-root-partition))))
 
 (define visionfive2-disk-image
