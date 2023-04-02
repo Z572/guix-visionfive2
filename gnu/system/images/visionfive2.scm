@@ -74,7 +74,7 @@
   (image-type
    (name 'visionfive2-raw)
    (constructor (cut image-with-os
-                     (raw-with-offset-disk-image (* 4 (expt 2 20))) ;4MiB
+                     (raw-with-offset-disk-image (* 298 (expt 2 20))) ;298MiB
                      <>))))
 
 (define visionfive2-barebones-raw-image
