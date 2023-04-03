@@ -165,17 +165,19 @@ also initializes the boards (RAM etc).")
          ,@(package-native-inputs u-boot))))))
 
 (define-public u-boot-starfive-visionfive2
-  (let ((base (make-u-boot-package "starfive_visionfive2" "riscv64-linux-gnu")))
-    (package
-      (inherit base)
-      (arguments
-       (substitute-keyword-arguments (package-arguments base)
-         ((#:phases phases)
-          #~(modify-phases #$phases
-              (add-after 'unpack 'set-environment
-                (lambda* (#:key inputs #:allow-other-keys)
-                  (setenv "OPENSBI" (search-input-file inputs
-                                                       "fw_dynamic.bin"))))))))
-      (inputs
-       (modify-inputs (package-inputs base)
-         (append opensbi-visionfive2))))))
+  (make-u-boot-package "starfive_visionfive2" "riscv64-linux-gnu")
+  ;; (let ((base (make-u-boot-package "starfive_visionfive2" "riscv64-linux-gnu")))
+  ;;   (package
+  ;;     (inherit base)
+  ;;     (arguments
+  ;;      (substitute-keyword-arguments (package-arguments base)
+  ;;        ((#:phases phases)
+  ;;         #~(modify-phases #$phases
+  ;;             (add-after 'unpack 'set-environment
+  ;;               (lambda* (#:key inputs #:allow-other-keys)
+  ;;                 (setenv "OPENSBI" (search-input-file inputs
+  ;;                                                      "fw_dynamic.bin"))))))))
+  ;;     (inputs
+  ;;      (modify-inputs (package-inputs base)
+  ;;        (append opensbi-visionfive2)))))
+  )
