@@ -60,6 +60,10 @@
 
 (define MiB (expt 2 20))
 
+(define dummy-initializer
+  #~(lambda* (root . rest)
+      (display "!")))
+
 (define visionfive2-disk-image
   (image-without-os
    (format 'disk-image)
@@ -68,13 +72,15 @@
                 (partition
                  (size (* 2 MiB))
                  (label "spl")
-                 (offset (* 4096 512)))
+                 (offset (* 4096 512))
+                 (initializer dummy-initializer))
                 (partition
                  (size (* 4 MiB))
                  (label "uboot")
-                 (offset (* 8192 512)))
+                 (offset (* 8192 512))
+                 (initializer dummy-initializer))
                 (partition
-                 (size 'guess)
+                 (size (* 292 MiB))
                  (offset (* 12288 512))
                  (label "boot")
                  (flags '(boot))
