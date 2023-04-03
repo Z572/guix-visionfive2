@@ -23,7 +23,7 @@
   #:use-module (gnu packages python)
   #:use-module (gnu packages cross-base)
   #:use-module (gnu packages gcc)
-  ;; #:use-module (vf2-guix packages bootloaders)
+  #:use-module (vf2-guix packages bootloaders)
   #:use-module (guix build-system gnu)
   #:use-module (guix download)
   #:use-module (guix git-download)
@@ -58,22 +58,18 @@
         #:make-flags
         #~(list "ARCH=riscv"
                 "PLATFORM=generic"
-                ;; (string-append
-                ;;  "FW_PAYLOAD_PATH="
-                ;;  #$u-boot-starfive-visionfive2 "/libexec/u-boot.bin")
-                ;; (string-append
-                ;;  "FW_FDT_PATH="
-                ;;  #$u-boot-starfive-visionfive2
-                ;;  "/libexec/arch/riscv/dts/starfive_visionfive2.dtb")
-                "FW_TEXT_START=0x40000000"
                 #$@(if (not (string-prefix? "riscv64" (%current-system)))
                        ;; (and (string-prefix? "riscv64" arch))
                        `("CROSS_COMPILE=riscv64-linux-gnu-")
                        `("CC=gcc"))
-                "FW_PAYLOAD=n"
                 "V=1")
         #:phases
         #~(modify-phases %standard-phases
+            (add-after 'unpack 'set-environment
+              (lambda* (#:key inputs #:allow-other-keys)
+                (setenv "FW_PAYLOAD_PATH" (search-input-file inputs "libexec/u-boot.bin"))
+                (setenv "FW_FDT_PATH" (search-input-file inputs "libexec/dts/dt.dtb"))
+                (setenv "FW_TEXT_START" "0x40000000")))
             (delete 'configure)
             (replace 'install
               (lambda* (#:key outputs #:allow-other-keys)
@@ -89,7 +85,7 @@
                `(("cross-gcc" ,(cross-gcc "riscv64-linux-gnu" #:xgcc gcc-7))
                  ("cross-binutils" ,(cross-binutils "riscv64-linux-gnu")))
                '())))
-      (inputs (list python dtc))
+      (inputs (list python dtc u-boot-starfive-visionfive2))
       (home-page "https://github.com/riscv/opensbi")
       (synopsis "RISC-V Open Source Supervisor Binary Interface")
       (description "A reference implementation of the RISC-V SBI specifications
