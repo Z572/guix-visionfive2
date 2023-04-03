@@ -84,7 +84,7 @@
                  (initializer dummy-initializer))
                 (partition
                  (size (* 292 MiB))
-                 (offset (* 12288 512))
+                 (offset (* 16384 512))
                  (label "boot")
                  (flags '(boot))
                  (file-system "vfat")
