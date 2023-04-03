@@ -27,27 +27,13 @@
   #:use-module (gnu system file-systems)
   #:use-module (gnu system image)
   #:use-module (gnu build image)
+  #:use-module (guix platforms riscv)
   #:use-module (guix records)
   #:use-module (guix gexp)
   #:use-module (srfi srfi-26)
   #:export (visionfive2-barebones-os
             visionfive2-image-type
             visionfive2-barebones-raw-image))
-
-(define-record-type* <platform> platform make-platform
-  platform?
-  (target               platform-target)
-  (system               platform-system)
-  (linux-architecture   platform-linux-architecture
-                        (default #false))
-  (glibc-dynamic-linker platform-glibc-dynamic-linker))
-
-(define riscv64-linux
-  (platform
-   (target "riscv64-linux-gnu")
-   (system "riscv64-linux")
-   (linux-architecture "riscv")
-   (glibc-dynamic-linker "/lib/ld-linux-riscv64-lp64d.so.1")))
 
 (define visionfive2-barebones-os
   (operating-system
@@ -72,37 +58,12 @@
                               (tty "ttyS2")))
                     %base-services))))
 
-;; (define root-label "Guix_image")
-
-;; (define boot-offset (* 12288 512))
-
-;; (define boot-partition
-;;   (partition
-;;    (size (* 292 (expt 2 20)))
-;;    (offset boot-offset)
-;;    (label "GNU-BOOT") ;cosmetic only
-;;    ;; Use "vfat" here since this property is used when mounting.  The actual
-;;    ;; FAT-ness is based on file system size (16 in this case).
-;;    (file-system "vfat")
-;;    (flags '(esp))
-;;    (initializer (gexp initialize-efi-partition))))
-
-;; (define root-partition
-;;   (partition
-;;    (size 'guess)
-;;    (label root-label)
-;;    (file-system "ext4")
-;;    ;; Disable the metadata_csum and 64bit features of ext4, for compatibility
-;;    ;; with U-Boot.
-;;    (file-system-options (list "-O" "^metadata_csum,^64bit"))
-;;    (flags '(boot))
-;;    (initializer (gexp initialize-root-partition))))
-
 (define MiB (expt 2 20))
 
 (define visionfive2-disk-image
   (image-without-os
    (format 'disk-image)
+   (partition-table-type 'gpt)
    (partitions (list
                 (partition
                  (size (* 2 MiB))
@@ -117,7 +78,13 @@
                  (offset (* 12288 512))
                  (label "boot")
                  (flags '(boot))
-                 (file-system "vfat"))
+                 (file-system "vfat")
+                 (initializer #~(lambda* (root . rest)
+                                  (mkdir root)
+                                  (call-with-output-file
+                                      (string-append root "/boot")
+                                    (lambda (port)
+                                      (format port "my-boot"))))))
                 (partition
                  (size 'guess)
                  (label "root")
