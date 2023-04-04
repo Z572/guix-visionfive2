@@ -20,10 +20,12 @@
   #:use-module (gnu bootloader)
   #:use-module (gnu bootloader u-boot)
   #:use-module (vf2-guix packages bootloaders)
+  #:use-module (vf2-guix packages firmware)
+  #:use-module (gnu packages bootloaders)
   #:use-module (guix gexp)
   #:export (u-boot-starfive-visionfive2-bootloader))
 
-(define (visionfive2-spl bootloader)
+(define (visionfive2-spl)
   (define builder
     (with-imported-modules '((guix build utils))
       #~(begin
@@ -33,7 +35,8 @@
                        )
           ;; (set-path-environment-variable "PATH" '("bin") (list #$starfive-tech-tools))
 
-          (copy-file (string-append (dirname #$bootloader) "libexec/spl/"
+          (copy-file (string-append (dirname #$u-boot-starfive-visionfive2)
+                                    "libexec/spl/"
                                     "u-boot-spl.bin")
                      "u-boot-spl.bin")
           (chmod "u-boot-spl.bin" #o755)
@@ -41,10 +44,28 @@
                   "-c" "-f u-boot-spl.bin"))))
   (computed-file "u-boot-spl.bin.normal.out" builder))
 
+(define (visionfive2-fw-payload-img)
+  (define builder
+    (with-imported-modules '((guix build utils))
+      #~(begin
+          (use-modules '((guix build utils)))
+          (copy-file (string-append (dirname #$starfive-tech-tools) "/etc/uboot_its/"
+                                    "visionfive2-uboot-fit-image.its")
+                     "visionfive2-uboot-fit-image.its")
+          (copy-file (string-append #$opensbi-visionfive2 "/fw_payload.bin")
+                     "fw_payload.bin")
+          (invoke (string-append #$u-boot-tools "/bin/mkimage")
+                  "-f visionfive2-uboot-fit-image.its"
+                  "-A riscv"
+                  "-O u-boot"
+                  "-T firmware"
+                  "visionfive2_fw_payload.img"))))
+  (computed-file "visionfive2_fw_payload.img" builder))
+
 (define install-starfive-visionfive2-u-boot
   #~(lambda (bootloader root-index image)
-      (let ((spl (visionfive2-spl bootloader))
-            (u-boot (string-append bootloader "/libexec/u-boot.img")))
+      (let ((spl #$(visionfive2-spl))
+            (u-boot #$(visionfive2-fw-payload-img)))
         (write-file-on-device spl (stat:size (stat spl))
                               image (* 4096 512))
         (write-file-on-device u-boot (stat:size (stat u-boot))
