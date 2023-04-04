@@ -23,9 +23,27 @@
   #:use-module (guix gexp)
   #:export (u-boot-starfive-visionfive2-bootloader))
 
+(define (visionfive2-spl bootloader)
+  (define builder
+    (with-imported-modules '((guix build utils))
+      #~(begin
+          (use-modules (guix build utils)
+                       ;; (ice-9 binary-ports)
+                       ;; (rnrs bytevectors)
+                       )
+          ;; (set-path-environment-variable "PATH" '("bin") (list #$starfive-tech-tools))
+
+          (copy-file (string-append (dirname #$bootloader) "libexec/spl/"
+                                    "u-boot-spl.bin")
+                     "u-boot-spl.bin")
+          (chmod "u-boot-spl.bin" #o755)
+          (invoke (string-append #$starfive-tech-tools "/bin/spl_tool")
+                  "-c" "-f u-boot-spl.bin"))))
+  (computed-file "u-boot-spl.bin.normal.out" builder))
+
 (define install-starfive-visionfive2-u-boot
   #~(lambda (bootloader root-index image)
-      (let ((spl (string-append bootloader "/libexec/spl/u-boot-spl.bin"))
+      (let ((spl (visionfive2-spl bootloader))
             (u-boot (string-append bootloader "/libexec/u-boot.img")))
         (write-file-on-device spl (stat:size (stat spl))
                               image (* 4096 512))
