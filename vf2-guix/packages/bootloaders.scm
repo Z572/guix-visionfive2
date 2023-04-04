@@ -134,19 +134,19 @@ also initializes the boards (RAM etc).")
                 (let* ((out (assoc-ref outputs "out"))
                        (libexec (string-append out "/libexec"))
                        (uboot-files (append
-                                        (remove
-                                         ;; Those would not be reproducible
-                                         ;; because of the randomness used
-                                         ;; to produce them.
-                                         ;; It's expected that the user will
-                                         ;; use u-boot-tools to generate them
-                                         ;; instead.
-                                         (lambda (name)
-                                           (string-suffix?
-                                            "sunxi-spl-with-ecc.bin"
-                                            name))
-                                         (find-files "." ".*\\.(bin|efi|img|spl|itb|dtb|rksd)$"))
-                                        (find-files "." "^(MLO|SPL)$"))))
+                                     (remove
+                                      ;; Those would not be reproducible
+                                      ;; because of the randomness used
+                                      ;; to produce them.
+                                      ;; It's expected that the user will
+                                      ;; use u-boot-tools to generate them
+                                      ;; instead.
+                                      (lambda (name)
+                                        (string-suffix?
+                                         "sunxi-spl-with-ecc.bin"
+                                         name))
+                                      (find-files "." ".*\\.(bin|efi|img|spl|itb|dtb|rksd)$"))
+                                     (find-files "." "^(MLO|SPL)$"))))
                   (mkdir-p libexec)
                   (install-file ".config" libexec)
                   ;; Useful for "qemu -kernel".
@@ -181,3 +181,46 @@ also initializes the boards (RAM etc).")
   ;;      (modify-inputs (package-inputs base)
   ;;        (append opensbi-visionfive2)))))
   )
+
+(define-public starfive-tech-tools
+  (let ((commit "8c5acc4e5eb7e4ad012463b05a5e3dbbfed1c38d")
+        (revision "0")
+        (version "0"))
+    (package
+      (name "starfive-tech-tools")
+      (version (git-version version revision commit))
+      (source
+       (origin
+         (method git-fetch)
+         (uri (git-reference
+               (url "https://github.com/starfive-tech/Tools")
+               (commit commit)))
+         (file-name (git-file-name name version))
+         (sha256
+          (base32
+           "0y0k7pmdydl8djrl47a2qk3ly3gaa7zlxfdy3dfdawkcr7mpxzr9"))))
+      (build-system gnu-build-system)
+      (arguments
+       (list
+        #:tests? #f ; no check target
+        #:make-flags
+        #~(list (string-append "CC=" #$(cc-for-target)))
+        #:phases
+        #~(modify-phases %standard-phases
+            (add-after 'unpack 'chdir-elisp
+              ;; spl_tool directory
+              (lambda _
+                (chdir "spl_tool")))
+            (delete 'configure)
+            (replace 'install
+              (lambda* (#:key outputs #:allow-other-keys)
+                (let* ((out (assoc-ref outputs "out"))
+                       (bin-dir (string-append out "/bin"))
+                       (etc-dir (string-append out "/etc")))
+                  (install-file "spl_tool" bin-dir)
+                  (install-file "../uboot_its/visionfive2-uboot-fit-image.its"
+                                (string-append etc-dir "/uboot_its"))))))))
+      (home-page "https://github.com/starfive-tech/Tools")
+      (synopsis "Starfive Tech tools")
+      (description "This package provides Starfive Tech tools.")
+      (license license:gpl2+))))
