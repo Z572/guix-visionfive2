@@ -6,7 +6,8 @@
   #:use-module (guix gexp)
   #:use-module (guix utils)
   #:use-module (guix git-download)
-  #:use-module (guix build-system copy))
+  #:use-module (guix build-system copy)
+  #:export (linux-vf2))
 
 (define (linux-vf2-urls version)
   "Return a list of URLS for Linux VERSION."
@@ -19,12 +20,13 @@
           hash
           #:key
           (name "linux-vf2")
+          (defconfig "starfive_visionfive2_defconfig")
           (linux linux-libre-riscv64-generic))
   (let ((linux-package
          (customize-linux
           #:name name
           #:linux linux
-          #:defconfig "starfive_visionfive2_defconfig"
+          #:defconfig defconfig
           #:extra-version "starfive-visionfive2"
           #:source (origin (method url-fetch)
                            (uri (linux-vf2-urls version))
