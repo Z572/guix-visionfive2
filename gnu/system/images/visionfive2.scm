@@ -70,18 +70,18 @@
    (format 'disk-image)
    (partition-table-type 'gpt)
    (partitions (list
-                (partition
-                 (size (* 2 MiB))
-                 (label "spl")
-                 (file-system "ext2")
-                 (offset (* 4096 512))
-                 (initializer dummy-initializer))
-                (partition
-                 (size (* 4 MiB))
-                 (label "uboot")
-                 (offset (* 8192 512))
-                 (file-system "ext2")
-                 (initializer dummy-initializer))
+                ;; (partition
+                ;;  (size (* 2 MiB))
+                ;;  (label "spl")
+                ;;  (file-system "ext2")
+                ;;  (offset (* 4096 512))
+                ;;  (initializer dummy-initializer))
+                ;; (partition
+                ;;  (size (* 4 MiB))
+                ;;  (label "uboot")
+                ;;  (offset (* 8192 512))
+                ;;  (file-system "ext2")
+                ;;  (initializer dummy-initializer))
                 (partition
                  (size (* 292 MiB))
                  (offset (* 16384 512))
