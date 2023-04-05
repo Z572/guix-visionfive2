@@ -29,17 +29,14 @@
   (define builder
     (with-imported-modules '((guix build utils))
       #~(begin
-          (use-modules (guix build utils)
-                       ;; (ice-9 binary-ports)
-                       ;; (rnrs bytevectors)
-                       )
+          (use-modules (guix build utils))
           ;; (set-path-environment-variable "PATH" '("bin") (list #$starfive-tech-tools))
 
           (copy-file (string-append (dirname #$u-boot-starfive-visionfive2)
                                     "libexec/spl/"
                                     "u-boot-spl.bin")
                      "u-boot-spl.bin")
-          (chmod "u-boot-spl.bin" #o755)
+          (chmod "u-boot-spl.bin" #o644)
           (invoke (string-append #$starfive-tech-tools "/bin/spl_tool")
                   "-c" "-f u-boot-spl.bin"))))
   (computed-file "u-boot-spl.bin.normal.out" builder))
@@ -52,8 +49,10 @@
           (copy-file (string-append (dirname #$starfive-tech-tools) "/etc/uboot_its/"
                                     "visionfive2-uboot-fit-image.its")
                      "visionfive2-uboot-fit-image.its")
+          (chmod "visionfive2-uboot-fit-image.its" #o644)
           (copy-file (string-append #$opensbi-visionfive2 "/fw_payload.bin")
                      "fw_payload.bin")
+          (chmod "fw_payload.bin" #o644)
           (invoke (string-append #$u-boot-tools "/bin/mkimage")
                   "-f visionfive2-uboot-fit-image.its"
                   "-A riscv"
