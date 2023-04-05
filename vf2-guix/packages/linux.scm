@@ -12,7 +12,7 @@
   "Return a list of URLS for Linux VERSION."
   (list
    (string-append
-    "https://github.com/starfive-tech/linux/releases/tag/" version ".tar.gz")))
+    "https://github.com/starfive-tech/linux/archive/refs/tags/" version ".tar.gz")))
 
 (define* (linux-vf2
           version
