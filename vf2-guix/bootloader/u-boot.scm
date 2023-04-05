@@ -30,23 +30,24 @@
     (with-imported-modules '((guix build utils))
       #~(begin
           (use-modules (guix build utils))
-          ;; (set-path-environment-variable "PATH" '("bin") (list #$starfive-tech-tools))
-
-          (copy-file (string-append (dirname #$u-boot-starfive-visionfive2)
-                                    "libexec/spl/"
+          (copy-file (string-append #$u-boot-starfive-visionfive2
+                                    "/libexec/spl/"
                                     "u-boot-spl.bin")
                      "u-boot-spl.bin")
           (chmod "u-boot-spl.bin" #o644)
           (invoke (string-append #$starfive-tech-tools "/bin/spl_tool")
-                  "-c" "-f u-boot-spl.bin"))))
+                  "-c"
+                  "-f" "u-boot-spl.bin")
+          (copy-file "u-boot-spl.bin.normal.out" #$output))))
   (computed-file "u-boot-spl.bin.normal.out" builder))
 
 (define (visionfive2-fw-payload-img)
   (define builder
     (with-imported-modules '((guix build utils))
       #~(begin
-          (use-modules '((guix build utils)))
-          (copy-file (string-append (dirname #$starfive-tech-tools) "/etc/uboot_its/"
+          (use-modules (guix build utils))
+          (set-path-environment-variable "PATH" '("bin") (list #$dtc))
+          (copy-file (string-append #$starfive-tech-tools "/etc/uboot_its/"
                                     "visionfive2-uboot-fit-image.its")
                      "visionfive2-uboot-fit-image.its")
           (chmod "visionfive2-uboot-fit-image.its" #o644)
@@ -54,11 +55,12 @@
                      "fw_payload.bin")
           (chmod "fw_payload.bin" #o644)
           (invoke (string-append #$u-boot-tools "/bin/mkimage")
-                  "-f visionfive2-uboot-fit-image.its"
-                  "-A riscv"
-                  "-O u-boot"
-                  "-T firmware"
-                  "visionfive2_fw_payload.img"))))
+                  "-f" "visionfive2-uboot-fit-image.its"
+                  "-A" "riscv"
+                  "-O" "u-boot"
+                  "-T" "firmware"
+                  "visionfive2_fw_payload.img")
+          (copy-file "visionfive2_fw_payload.img" #$output))))
   (computed-file "visionfive2_fw_payload.img" builder))
 
 (define install-starfive-visionfive2-u-boot
