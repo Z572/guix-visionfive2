@@ -86,7 +86,7 @@
                  (size (* 292 MiB))
                  (offset (* 16384 512))
                  (label "boot")
-                 (flags '(boot))
+                 (flags '(esp))
                  (file-system "vfat")
                  (initializer #~(lambda* (root . rest)
                                   (mkdir root)
@@ -97,6 +97,7 @@
                 (partition
                  (size 'guess)
                  (label "root")
+                 (flags '(boot))
                  (file-system "ext4")
                  (file-system-options (list "-O" "^metadata_csum,^64bit"))
                  (initializer (gexp initialize-root-partition)))))))
