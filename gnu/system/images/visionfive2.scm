@@ -70,24 +70,27 @@
    (format 'disk-image)
    (partition-table-type 'gpt)
    (partitions (list
-                ;; (partition
-                ;;  (size (* 2 MiB))
-                ;;  (label "spl")
-                ;;  (file-system "ext2")
-                ;;  (offset (* 4096 512))
-                ;;  (initializer dummy-initializer))
-                ;; (partition
-                ;;  (size (* 4 MiB))
-                ;;  (label "uboot")
-                ;;  (offset (* 8192 512))
-                ;;  (file-system "ext2")
-                ;;  (initializer dummy-initializer))
+                (partition
+                 (size (* 2 MiB))
+                 (label "spl")
+                 ;; (file-system "ext2")
+                 (type-uuid "2E54B353-1271-4842-806F-E436D6AF6985")
+                 (offset (* 4096 512))
+                 (initializer dummy-initializer))
+                (partition
+                 (size (* 4 MiB))
+                 (label "uboot")
+                 (offset (* 8192 512))
+                 ;; (file-system "ext2")
+                 (type-uuid "5B193300-FC78-40CD-8002-E86C45580B47")
+                 (initializer dummy-initializer))
                 (partition
                  (size (* 292 MiB))
                  (offset (* 16384 512))
                  (label "boot")
                  (flags '(esp))
                  (file-system "vfat")
+                 (type-uuid "EBD0A0A2-B9E5-4433-87C0-68B6B72699C7")
                  (initializer #~(lambda* (root . rest)
                                   (mkdir root)
                                   (call-with-output-file
@@ -99,6 +102,7 @@
                  (label "root")
                  (flags '(boot))
                  (file-system "ext4")
+                 (type-uuid "0FC63DAF-8483-4772-8E79-3D69D8477DE4")
                  (file-system-options (list "-O" "^metadata_csum,^64bit"))
                  (initializer (gexp initialize-root-partition)))))))
 
