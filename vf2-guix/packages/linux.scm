@@ -34,6 +34,16 @@
     (package
       (inherit linux-package)
       (version version)
+      (arguments
+       (substitute-keyword-arguments (package-arguments linux-package)
+         ((#:phases phases '%standard-phases)
+          #~(modify-phases #$phases
+              (add-after 'install 'rename-dtb
+                (lambda* (#:key outputs #:allow-other-keys)
+                  (let* ((out (assoc-ref outputs "out"))
+                         (dtbs (string-append out "/lib/dtbs/starfive")))
+                    (with-directory-excursion dtbs
+                      (rename-file "jh7110-visionfive-v2.dtb" "starfive_visionfive2.dtb")))))))))
       (home-page "https://www.kernel.org/")
       (synopsis "Linux kernel with nonfree binary blobs included")
       (description
