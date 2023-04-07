@@ -24,6 +24,7 @@
   #:use-module (gnu services)
   #:use-module (gnu services base)
   #:use-module (gnu system)
+  #:use-module (gnu system uuid)
   #:use-module (gnu system file-systems)
   #:use-module (gnu system image)
   #:use-module (gnu build image)
@@ -74,7 +75,7 @@
                  (size (* 2 MiB))
                  (label "spl")
                  ;; (file-system "ext2")
-                 (type-uuid "2E54B353-1271-4842-806F-E436D6AF6985")
+                 (type-uuid (uuid "2e54b353-1271-4842-806f-e436d6af6985"))
                  (offset (* 4096 512))
                  (initializer dummy-initializer))
                 (partition
@@ -82,7 +83,7 @@
                  (label "uboot")
                  (offset (* 8192 512))
                  ;; (file-system "ext2")
-                 (type-uuid "5B193300-FC78-40CD-8002-E86C45580B47")
+                 (type-uuid (uuid "5b193300-fc78-40cd-8002-e86c45580b47"))
                  (initializer dummy-initializer))
                 (partition
                  (size (* 292 MiB))
@@ -90,7 +91,7 @@
                  (label "boot")
                  (flags '(esp))
                  (file-system "vfat")
-                 (type-uuid "EBD0A0A2-B9E5-4433-87C0-68B6B72699C7")
+                 (type-uuid (uuid "ebd0a0a2-b9e5-4433-87c0-68b6b72699c7"))
                  (initializer #~(lambda* (root . rest)
                                   (mkdir root)
                                   (call-with-output-file
@@ -102,7 +103,7 @@
                  (label "root")
                  (flags '(boot))
                  (file-system "ext4")
-                 (type-uuid "0FC63DAF-8483-4772-8E79-3D69D8477DE4")
+                 (type-uuid (uuid "0fc63daf-8483-4772-8e79-3d69d8477de4"))
                  (file-system-options (list "-O" "^metadata_csum,^64bit"))
                  (initializer (gexp initialize-root-partition)))))))
 
