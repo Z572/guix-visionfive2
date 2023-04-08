@@ -9,17 +9,19 @@
   #:use-module (guix build-system copy)
   #:export (linux-vf2))
 
-(define (linux-vf2-urls version)
-  "Return a list of URLS for Linux VERSION."
-  (list
-   (string-append
-    "https://github.com/starfive-tech/linux/archive/refs/tags/" version ".tar.gz")))
+(define (linux-vf2-urls commit)
+  "Return a git-reference for starfive Linux COMMIT."
+  (git-reference
+   (url "https://github.com/starfive-tech/linux")
+   (commit commit)))
 
 (define* (linux-vf2
           version
+          commit
           hash
           #:key
           (name "linux-vf2")
+          (revision "0")
           (defconfig "starfive_visionfive2_defconfig")
           (linux linux-libre-riscv64-generic))
   (let ((linux-package
@@ -28,12 +30,13 @@
           #:linux linux
           #:defconfig defconfig
           #:extra-version "starfive-visionfive2"
-          #:source (origin (method url-fetch)
-                           (uri (linux-vf2-urls version))
-                           (sha256 (base32 hash))))))
+          #:source (origin (method git-fetch)
+                           (uri (linux-vf2-urls commit))
+                           (sha256 (base32 hash))
+                           (file-name (git-file-name name version))))))
     (package
       (inherit linux-package)
-      (version version)
+      (version (git-version version revision commit))
       (arguments
        (substitute-keyword-arguments (package-arguments linux-package)
          ((#:phases phases '%standard-phases)
@@ -52,4 +55,5 @@ System on hardware which requires nonfree software to function."))))
 
 (define-public vf2-kernel
   (linux-vf2 "VF2_v2.11.5"
-             "1h0zac2szbxyv8dp0sm0bfrprjn09j3icjsl7jp35bsz336g4vla"))
+             "cea31b2516edef9908d43ca7d0b4c34db45cc5ac"
+             "1fy9lcykwb77infkjvzidgvw3bga5k4j7pzcm341kcyy22j7gw7f"))
