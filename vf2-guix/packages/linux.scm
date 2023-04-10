@@ -38,6 +38,10 @@
        (substitute-keyword-arguments (package-arguments linux-package)
          ((#:phases phases '%standard-phases)
           #~(modify-phases #$phases
+              (add-after 'unpack 'increase-memory
+                (lambda _
+                  (substitute* "arch/riscv/boot/dts/starfive/jh7110-visionfive-v2.dtsi"
+                    (("0x0 0x40000000 0x1 0x0") "0x0 0x40000000 0x2 0x0"))))
               (add-after 'install 'rename-dtb
                 (lambda* (#:key outputs #:allow-other-keys)
                   (let* ((out (assoc-ref outputs "out"))
