@@ -3,6 +3,7 @@
   #:use-module (gnu packages linux)
   #:use-module (guix packages)
   #:use-module (guix download)
+  #:use-module (gnu packages compression)
   #:use-module (guix gexp)
   #:use-module (guix utils)
   #:use-module (guix git-download)
