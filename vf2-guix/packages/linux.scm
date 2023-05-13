@@ -10,12 +10,6 @@
   #:use-module (guix build-system copy)
   #:export (linux-vf2))
 
-(define (linux-vf2-urls version)
-  "Return a list of URLS for Linux VERSION."
-  (list
-   (string-append
-    "https://github.com/starfive-tech/linux/archive/refs/tags/" version ".tar.gz")))
-
 (define (linux-vf2-upstream commit)
   (git-reference
    (url "https://github.com/starfive-tech/linux")
@@ -39,11 +33,7 @@
                      (method git-fetch)
                      (uri (linux-vf2-upstream commit))
                      (file-name (git-file-name name version))
-                     (sha256 (base32 hash)))
-          ;; (origin (method url-fetch)
-          ;;         (uri (linux-vf2-urls version))
-          ;;         (sha256 (base32 hash)))
-          )))
+                     (sha256 (base32 hash))))))
     (package
       (inherit linux-package)
       (version version)
@@ -70,12 +60,8 @@
        "The unmodified Linux kernel, including nonfree blobs, for running Guix
 System on hardware which requires nonfree software to function."))))
 
-
-;; (define-public vf2-kernel
-;;   (linux-vf2 "VF2_v2.11.5"
-;;              "1h0zac2szbxyv8dp0sm0bfrprjn09j3icjsl7jp35bsz336g4vla"))
-
 (define-public vf2-kernel-upstream
-  (linux-vf2 "d768c65c1daaca83ff6b8d119ca50ff9d8273b22"
-             "1fvbjr74spm6iig0b2nksmrzzas6zlsv7h94w0546jdvpjpckgw6"
-             "VF2_v2.11.5"))
+  (linux-vf2 "5067e82028046501daa6e0c53e8c54343a217f45"
+             "1qh53mzg6d3130ys7c7cwdazh20wzyhazz92ix96dc42nhjp49xg"
+             "VF2_v6.4"
+             #:defconfig (local-file "aux-files/linux/x86_64_defconfig")))
