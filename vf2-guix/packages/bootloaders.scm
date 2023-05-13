@@ -79,6 +79,116 @@
 also initializes the boards (RAM etc).")
       (license license:gpl2+))))
 
+(define u-boot-upstream (@@ (gnu packages bootloaders) u-boot))
+
+(define-public u-boot-tools
+  (package
+    (inherit u-boot-upstream)
+    (name "u-boot-tools")
+    (native-inputs
+     (modify-inputs (package-native-inputs u-boot-upstream)
+       (prepend python-coverage python-pycryptodomex python-pytest)))
+    (arguments
+     `(#:make-flags '("HOSTCC=gcc" "NO_SDL=1")
+       #:test-target "tcheck"
+       #:phases
+       (modify-phases %standard-phases
+         (add-after 'unpack 'patch
+           (lambda* (#:key inputs #:allow-other-keys)
+             (substitute* "Makefile"
+               (("/bin/pwd") (which "pwd"))
+               (("/bin/false") (which "false")))
+             (substitute* "tools/dtoc/fdt_util.py"
+               (("'cc'") "'gcc'"))
+             (substitute* "tools/patman/test_util.py"
+               ;; python3-coverage is simply called coverage in guix.
+               (("python3-coverage") "coverage")
+
+               ;; Don't require 100% coverage since it's brittle and can
+               ;; fail with newer versions of coverage or dependencies.
+               (("raise ValueError\\('Test coverage failure'\\)")
+                "print('Continuing anyway since Guix does not care :O')"))
+             (substitute* "test/run"
+               ;; Make it easier to find test failures.
+               (("#!/bin/bash") "#!/bin/bash -x")
+               ;; This test would require git.
+               (("\\./tools/patman/patman") (which "true"))
+               ;; FIXME: test fails, needs further investiation
+               (("run_test \"binman\"") "# run_test \"binman\"")
+               ;; FIXME: test_spl fails, needs further investiation
+               (("test_ofplatdata or test_handoff or test_spl")
+                "test_ofplatdata or test_handoff")
+               ;; FIXME: code coverage not working
+               (("run_test \"binman code coverage\"")
+                "# run_test \"binman code coverage\"")
+               ;; This test would require internet access.
+               (("\\./tools/buildman/buildman") (which "true")))
+             (substitute* "test/py/tests/test_sandbox_exit.py"
+               (("def test_ctrl_c")
+                "@pytest.mark.skip(reason='Guix has problems with SIGINT')
+def test_ctrl_c"))
+             ;; Test against the tools being installed rather than tools built
+             ;; for "sandbox" target.
+             (substitute* "test/image/test-imagetools.sh"
+               (("BASEDIR=sandbox") "BASEDIR=."))
+             (for-each (lambda (file)
+                         (substitute* file
+                           ;; Disable features that require OpenSSL due
+                           ;; to GPL/Openssl license incompatibilities.
+                           ;; See https://bugs.gnu.org/34717 for
+                           ;; details.
+                           (("CONFIG_FIT_SIGNATURE=y")
+                            "CONFIG_FIT_SIGNATURE=n\nCONFIG_UT_LIB_ASN1=n\nCONFIG_TOOLS_LIBCRYPTO=n")
+                           ;; This test requires a sound system, which is un-used
+                           ;; in u-boot-tools.
+                           (("CONFIG_SOUND=y") "CONFIG_SOUND=n")))
+                       (find-files "configs" "sandbox_.*defconfig$|tools-only_defconfig"))))
+         (replace 'configure
+           (lambda* (#:key make-flags #:allow-other-keys)
+             (apply invoke "make" "tools-only_defconfig" make-flags)))
+         (replace 'build
+           (lambda* (#:key inputs make-flags #:allow-other-keys)
+             (apply invoke "make" "tools-all" make-flags)))
+         (replace 'install
+           (lambda* (#:key outputs #:allow-other-keys)
+             (let* ((out (assoc-ref outputs "out"))
+                    (bin (string-append out "/bin")))
+               (for-each (lambda (name)
+                           (install-file name bin))
+                         '("tools/netconsole"
+                           "tools/jtagconsole"
+                           "tools/gen_eth_addr"
+                           "tools/gen_ethaddr_crc"
+                           "tools/img2srec"
+                           "tools/mkenvimage"
+                           "tools/dumpimage"
+                           "tools/mkimage"
+                           "tools/kwboot"
+                           "tools/proftool"
+                           "tools/fdtgrep"
+                           "tools/env/fw_printenv"
+                           "tools/sunxi-spl-image-builder")))))
+         (delete 'check)
+         (add-after 'install 'check
+           (lambda* (#:key make-flags test-target #:allow-other-keys)
+             (invoke "test/image/test-imagetools.sh")))
+         ;; Only run full test suite on x86_64 systems, as many tests
+         ;; assume x86_64.
+         ,@(if (string-match "^x86_64-linux"
+                             (or (%current-target-system)
+                                 (%current-system)))
+               '((add-after 'check 'check-x86
+                   (lambda* (#:key make-flags test-target #:allow-other-keys)
+                     (apply invoke "make" "mrproper" make-flags)
+                     (setenv "SDL_VIDEODRIVER" "dummy")
+                     (setenv "PAGER" "cat")
+                     (apply invoke "make" test-target make-flags))))
+               '()))))
+    (description (string-append
+                  (package-description u-boot-upstream)
+                  "  This package provides board-independent tools "
+                  "of U-Boot."))))
+
 (define-public (make-u-boot-package board triplet)
   "Returns a u-boot package for BOARD cross-compiled for TRIPLET."
   (let ((same-arch? (lambda ()

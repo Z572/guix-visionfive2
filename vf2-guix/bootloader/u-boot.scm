@@ -19,7 +19,7 @@
 (define-module (vf2-guix bootloader u-boot)
   #:use-module (gnu bootloader)
   #:use-module (gnu bootloader u-boot)
-  #:use-module (vf2-guix packages bootloaders)
+  #:use-module ((vf2-guix packages bootloaders) #:prefix vf2:)
   #:use-module (vf2-guix packages firmware)
   #:use-module (gnu packages bootloaders)
   #:use-module (guix gexp)
@@ -27,40 +27,44 @@
 
 (define (visionfive2-spl)
   (define builder
-    (with-imported-modules '((guix build utils))
-      #~(begin
-          (use-modules (guix build utils))
-          (copy-file (string-append #$u-boot-starfive-visionfive2
-                                    "/libexec/spl/"
-                                    "u-boot-spl.bin")
-                     "u-boot-spl.bin")
-          (chmod "u-boot-spl.bin" #o644)
-          (invoke (string-append #$starfive-tech-tools "/bin/spl_tool")
-                  "-c"
-                  "-f" "u-boot-spl.bin")
-          (copy-file "u-boot-spl.bin.normal.out" #$output))))
+    (let ((u-boot-sf vf2:u-boot-starfive-visionfive2)
+          (tools-sf vf2:starfive-tech-tools))
+      (with-imported-modules '((guix build utils))
+        #~(begin
+            (use-modules (guix build utils))
+            (copy-file (string-append #$u-boot-sf
+                                      "/libexec/spl/"
+                                      "u-boot-spl.bin")
+                       "u-boot-spl.bin")
+            (chmod "u-boot-spl.bin" #o644)
+            (invoke (string-append #$tools-sf "/bin/spl_tool")
+                    "-c"
+                    "-f" "u-boot-spl.bin")
+            (copy-file "u-boot-spl.bin.normal.out" #$output)))))
   (computed-file "u-boot-spl.bin.normal.out" builder))
 
 (define (visionfive2-fw-payload-img)
   (define builder
-    (with-imported-modules '((guix build utils))
-      #~(begin
-          (use-modules (guix build utils))
-          (set-path-environment-variable "PATH" '("bin") (list #$dtc))
-          (copy-file (string-append #$starfive-tech-tools "/etc/uboot_its/"
-                                    "visionfive2-uboot-fit-image.its")
-                     "visionfive2-uboot-fit-image.its")
-          (chmod "visionfive2-uboot-fit-image.its" #o644)
-          (copy-file (string-append #$opensbi-visionfive2 "/fw_payload.bin")
-                     "fw_payload.bin")
-          (chmod "fw_payload.bin" #o644)
-          (invoke (string-append #$u-boot-tools "/bin/mkimage")
-                  "-f" "visionfive2-uboot-fit-image.its"
-                  "-A" "riscv"
-                  "-O" "u-boot"
-                  "-T" "firmware"
-                  "visionfive2_fw_payload.img")
-          (copy-file "visionfive2_fw_payload.img" #$output))))
+    (let ((u-boot-tools-wo-sdl vf2:u-boot-tools)
+          (tools-sf vf2:starfive-tech-tools))
+      (with-imported-modules '((guix build utils))
+        #~(begin
+            (use-modules (guix build utils))
+            (set-path-environment-variable "PATH" '("bin") (list #$dtc))
+            (copy-file (string-append #$tools-sf "/etc/uboot_its/"
+                                      "visionfive2-uboot-fit-image.its")
+                       "visionfive2-uboot-fit-image.its")
+            (chmod "visionfive2-uboot-fit-image.its" #o644)
+            (copy-file (string-append #$opensbi-visionfive2 "/fw_payload.bin")
+                       "fw_payload.bin")
+            (chmod "fw_payload.bin" #o644)
+            (invoke (string-append #$u-boot-tools-wo-sdl "/bin/mkimage")
+                    "-f" "visionfive2-uboot-fit-image.its"
+                    "-A" "riscv"
+                    "-O" "u-boot"
+                    "-T" "firmware"
+                    "visionfive2_fw_payload.img")
+            (copy-file "visionfive2_fw_payload.img" #$output)))))
   (computed-file "visionfive2_fw_payload.img" builder))
 
 (define install-starfive-visionfive2-u-boot
