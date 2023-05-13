@@ -79,5 +79,5 @@
 (define u-boot-starfive-visionfive2-bootloader
   (bootloader
    (inherit u-boot-bootloader)
-   (package u-boot-starfive-visionfive2)
+   (package vf2:u-boot-starfive-visionfive2)
    (disk-image-installer install-starfive-visionfive2-u-boot)))
