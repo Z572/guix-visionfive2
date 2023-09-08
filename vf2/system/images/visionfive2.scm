@@ -16,11 +16,13 @@
 ;;; You should have received a copy of the GNU General Public License
 ;;; along with GNU Guix.  If not, see <http://www.gnu.org/licenses/>.
 
-(define-module (gnu system images visionfive2)
+(define-module (vf2 system images visionfive2)
   #:use-module (gnu bootloader)
-  #:use-module (vf2-guix bootloader u-boot)
+  #:use-module (vf2 bootloader u-boot)
   #:use-module (gnu image)
   #:use-module (gnu packages linux)
+  #:use-module (guix git-download)
+  #:use-module (guix packages)
   #:use-module (gnu services)
   #:use-module (gnu services base)
   #:use-module (gnu system)
@@ -32,6 +34,10 @@
   #:use-module (guix records)
   #:use-module (guix gexp)
   #:use-module (srfi srfi-26)
+  #:use-module (vf2 packages linux)
+  #:use-module (gnu packages tmux)
+  #:use-module (gnu packages admin)
+  #:use-module (gnu packages certs)
   #:export (visionfive2-barebones-os
             visionfive2-image-type
             visionfive2-barebones-raw-image))
@@ -45,26 +51,19 @@
                  (bootloader u-boot-starfive-visionfive2-bootloader)
                  (targets '("/dev/vda"))))
     (initrd-modules '())
-    (kernel linux-libre-riscv64-generic)
+    (kernel linux-visionfive2)
     (file-systems (cons (file-system
                           (device (file-system-label "my-root"))
                           (mount-point "/")
                           (type "ext4"))
                         %base-file-systems))
-    (services (cons (service agetty-service-type
-                             (agetty-configuration
-                              (extra-options '("-L")) ; no carrier detect
-                              (baud-rate "1500000")
-                              (term "vt100")
-                              (tty "ttyS2")))
-                    %base-services))))
-
-(define MiB (expt 2 20))
-
-(define dummy-initializer
-  #~(lambda* (root . rest)
-      (mkdir root)
-      (display "!")))
+    (packages
+     (cons* nss-certs
+            htop
+            tmux
+            %base-packages))
+    (kernel-arguments
+     (list "console=ttyS0,115200"))))
 
 (define visionfive2-disk-image
   (image-without-os
@@ -72,40 +71,18 @@
    (partition-table-type 'gpt)
    (partitions (list
                 (partition
-                 (size (* 2 MiB))
+                 (size (* 1 (expt 2 20)))
                  (label "spl")
-                 ;; (file-system "ext2")
-                 (type-uuid (uuid "2e54b353-1271-4842-806f-e436d6af6985"))
-                 (offset (* 4096 512))
-                 (initializer dummy-initializer))
+                 (offset (* 34 512))
+                 (file-system "unformatted")
+                 (uuid (uuid "2E54B353-1271-4842-806F-E436D6AF6985")))
                 (partition
-                 (size (* 4 MiB))
+                 (size (* 4 (expt 2 20)))
                  (label "uboot")
-                 (offset (* 8192 512))
-                 ;; (file-system "ext2")
-                 (type-uuid (uuid "5b193300-fc78-40cd-8002-e86c45580b47"))
-                 (initializer dummy-initializer))
-                (partition
-                 (size (* 292 MiB))
-                 (offset (* 16384 512))
-                 (label "boot")
-                 (flags '(esp))
-                 (file-system "vfat")
-                 (type-uuid (uuid "ebd0a0a2-b9e5-4433-87c0-68b6b72699c7"))
-                 (initializer #~(lambda* (root . rest)
-                                  (mkdir root)
-                                  (call-with-output-file
-                                      (string-append root "/boot")
-                                    (lambda (port)
-                                      (format port "my-boot"))))))
-                (partition
-                 (size 'guess)
-                 (label "root")
-                 (flags '(boot))
-                 (file-system "ext4")
-                 (type-uuid (uuid "0fc63daf-8483-4772-8e79-3d69d8477de4"))
-                 (file-system-options (list "-O" "^metadata_csum,^64bit"))
-                 (initializer (gexp initialize-root-partition)))))))
+                 (offset (* 2082 512))
+                 (file-system "unformatted")
+                 (uuid (uuid "BC13C2FF-59E6-4262-A352-B275FD6F7172")))
+                root-partition))))
 
 (define visionfive2-image-type
   (image-type
@@ -119,5 +96,4 @@
                         #:type visionfive2-image-type))
    (name 'visionfive2-barebones-raw-image)))
 
-;; Return the default image.
 visionfive2-barebones-raw-image
