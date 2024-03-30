@@ -26,17 +26,8 @@
 
 (define install-starfive-visionfive2-u-boot
   #~(lambda (bootloader root-index image)
-      (let ((spl (begin
-                   (copy-file (string-append
-                               bootloader
-                               "/libexec/spl/"
-                               "u-boot-spl.bin")
-                              "u-boot-spl.bin")
-                   (invoke (string-append #$starfive-tech-tools "/bin/spl_tool")
-                           "-c"
-                           "-f"
-                           "u-boot-spl.bin")
-                   "u-boot-spl.bin.normal.out"))
+      (let ((spl (string-append
+                  bootloader "/libexec/spl/u-boot-spl.bin.normal.out"))
             (u-boot (string-append bootloader "/libexec/u-boot.itb")))
         (write-file-on-device spl (stat:size (stat spl))
                               image (* 34 512))
